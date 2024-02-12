@@ -15,12 +15,14 @@ def send_email(subject, message, dry_run):
         sendErrorEmail(RECIPIENTS, subject, message)
     logging.info("Email Sent")
 
-def long_running_process_monitor(threshold=30*60):  # 30 minutes
+def long_running_process_monitor(threshold):  # 30 minutes
     long_running_processes = []
-    for proc in psutil.process_iter(['pid', 'name', 'create_time']):
+    for proc in psutil.process_iter(['pid', 'name', 'create_time', 'cmdline']):
         if time.time() - proc.info['create_time'] > threshold:
-            long_running_processes.append(proc.info)
+            if proc.info['cmdline'] and ('python' in proc.info['cmdline'][0] or 'sh' in proc.info['cmdline'][0]):
+                long_running_processes.append(proc.info)
     return long_running_processes
+
 
 def main():
     subject = "Long Running Process Alert"
